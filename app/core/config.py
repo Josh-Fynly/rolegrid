@@ -1,0 +1,27 @@
+import os
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+class Settings:
+    PROJECT_NAME = "SkillForge"
+
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+    SECRET_KEY = os.getenv(
+        "SECRET_KEY",
+        "CHANGE_THIS_IN_PRODUCTION"
+    )
+
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(
+        os.getenv(
+            "ACCESS_TOKEN_EXPIRE_MINUTES",
+            30
+        )
+    )
+
+
+settings = Settings()
