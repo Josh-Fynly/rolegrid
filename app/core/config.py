@@ -1,13 +1,11 @@
 import os
-
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
 
 class Settings:
-    PROJECT_NAME = "SkillForge"
+    PROJECT_NAME = "RoleGrid"
 
     DATABASE_URL = os.getenv("DATABASE_URL")
 
