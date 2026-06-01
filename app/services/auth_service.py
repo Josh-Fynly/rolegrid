@@ -1,50 +1,66 @@
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.deps.db import get_db
+from app.api.deps.auth import get_current_user
+
+from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.auth import TokenResponse
+
+from app.services.auth_service import (
+    register_user,
+    authenticate_user
+)
+
 from app.models.user import User
-from app.core.security import (
-    hash_password,
-    verify_password,
-    create_access_token
+
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["Auth"]
 )
 
 
-def register_user(db: Session, email: str, password: str, full_name: str):
-    existing = db.query(User).filter(User.email == email).first()
+@router.post("/register", response_model=UserResponse)
+def register(user: UserCreate, db: Session = Depends(get_db)):
 
-    if existing:
-        return None
-
-    user = User(
-        email=email,
-        password_hash=hash_password(password),
-        full_name=full_name
+    created_user = register_user(
+        db=db,
+        email=user.email,
+        password=user.password,
+        full_name=user.full_name
     )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    if not created_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
 
-    return user
+    return created_user
 
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = db.query(User).filter(User.email == email).first()
+@router.post("/login", response_model=TokenResponse)
+def login(user: UserLogin, db: Session = Depends(get_db)):
 
-    if not user:
-        return None
-
-    if not verify_password(password, user.password_hash):
-        return None
-
-    token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "email": user.email
-        }
+    token = authenticate_user(
+        db=db,
+        email=user.email,
+        password=user.password
     )
 
-    return token
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
 
 
-def get_user_by_id(db: Session, user_id: str):
-    return db.query(User).filter(User.id == user_id).first()
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
