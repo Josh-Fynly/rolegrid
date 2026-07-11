@@ -13,7 +13,7 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: str
+    id: int
     email: EmailStr
     full_name: str
     is_active: bool
