@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 
 from app.api.routes import auth as auth_routes
+from app.api.routes import industry as industry_routes
 
 
 Base.metadata.create_all(bind=engine)
@@ -12,8 +13,8 @@ app = FastAPI(
     title=settings.PROJECT_NAME
 )
 
-
 app.include_router(auth_routes.router)
+app.include_router(industry_routes.router)
 
 
 @app.get("/health")
